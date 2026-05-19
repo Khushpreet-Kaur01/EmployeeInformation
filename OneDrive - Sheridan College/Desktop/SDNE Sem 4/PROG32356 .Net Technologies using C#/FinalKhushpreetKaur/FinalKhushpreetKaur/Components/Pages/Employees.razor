@@ -1,0 +1,84 @@
+﻿@page "/employees"
+@rendermode InteractiveServer
+@inject EmployeeService EmployeeService
+
+<h3>Employees</h3>
+
+<div class="row mb-3">
+
+    <!-- Search box -->
+    <div class="col-md-4">
+        <label>Search Employee by Name:</label>
+        <input type="text" @bind="searchKeyword" class="form-control" />
+    </div>
+
+    <!-- Search button -->
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-primary w-100" @onclick="SearchByName">Search</button>
+    </div>
+
+    <!-- Department dropdown -->
+    <div class="col-md-4">
+        <label>Filter by Department:</label>
+        <select class="form-select" @onchange="OnDepartmentChanged">
+            <option value="-1">-- All Departments --</option>
+            <!-- add a foreach loop here to add authors to the dropdown -->
+            @foreach (var dept in departments)
+            {
+                <option value="@dept.DepartmentId">@dept.DepartmentName</option>
+            }
+        </select>
+    </div>
+</div>
+
+<!-- Employees table -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Employee Id</th>
+            <th>Name</th>
+            <th>Job Title</th>
+            <th>Department</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var emp in employees)
+        {
+            <tr>
+                <td>@emp.EmployeeID</td>
+                <td>@emp.EmployeeName</td>
+                <td>@emp.JobTitle</td>
+                <td>@emp.Department?.DepartmentName</td>
+            </tr>
+        }
+    
+           <!-- add a foreach loop here to add books to the table -->
+    </tbody>
+</table>
+
+@code {
+    private string? searchKeyword = null;
+
+    private int deptId = -1;
+
+    private List<Department> departments = new();
+    private List<Employee> employees = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        departments = await EmployeeService.GetAllDepartmentsAsync();
+        employees = await EmployeeService.GetEmployeesAsync();
+    }
+    private async Task SearchByName()
+    {
+        employees = await EmployeeService.GetEmployeesAsync(searchKeyword);
+    }
+
+    private async Task OnDepartmentChanged(ChangeEventArgs e)
+    {
+        deptId = Convert.ToInt32(e.Value);
+        employees = await EmployeeService.GetEmployeesByDepartmentAsync(deptId);
+
+    }
+
+}
